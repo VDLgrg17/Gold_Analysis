@@ -1,0 +1,85 @@
+import streamlit as st
+import requests
+
+def fetch_latest_news_from_web():
+    """Simula la ricerca delle ultime notizie sul mercato dell'oro nelle ultime 6 ore senza fare richieste bloccate."""
+    try:
+        search_query = "ultime notizie mercato oro nelle ultime 6 ore"
+        response = requests.get(f"https://www.bing.com/search?q={search_query}", headers={"User-Agent": "Mozilla/5.0"})
+        if response.status_code == 200:
+            return ["Notizie recuperate con successo, verifica manualmente il contenuto."]
+        else:
+            return ["Nessuna notizia trovata."]
+    except:
+        return ["Errore di connessione, usare notizie manuali."]
+
+def fetch_gold_volatility():
+    """Simula il recupero della volatilità dell'oro da una fonte alternativa."""
+    try:
+        search_query = "volatilità attuale oro ATR GVZ"
+        response = requests.get(f"https://www.bing.com/search?q={search_query}", headers={"User-Agent": "Mozilla/5.0"})
+        if response.status_code == 200:
+            return "Volatilità trovata, verifica manualmente il valore."
+        else:
+            return "Nessun dato di volatilità disponibile."
+    except:
+        return "Errore di connessione, usa dati storici."
+
+def calculate_gold_equivalent(points_forex=100):
+    """Calcola l'equivalenza tra 100 punti nel Forex e il movimento necessario sull'oro."""
+    gold_movement = points_forex * 0.01  # Ogni punto nel Forex equivale a 0.01 USD su XAU/USD
+    return gold_movement
+
+def analyze_news(news_lines):
+    """Analizza il contenuto delle notizie e assegna punteggi ai fattori macroeconomici."""
+    factors = {
+        "FED": 0,
+        "Dollaro": 0,
+        "Occupazione": 0,
+        "VIX": 0,
+        "ETF Oro": 0,
+        "Petrolio": 0,
+        "Geopolitica": 0
+    }
+   
+    for line in news_lines:
+        line = line.lower()
+        if "fed" in line or "tassi di interesse" in line:
+            factors["FED"] += 1 if "taglio" in line else -1
+        if "dollaro" in line or "DXY" in line:
+            factors["Dollaro"] += 1 if "debole" in line else -1
+        if "disoccupazione" in line or "NFP" in line:
+            factors["Occupazione"] += -1 if "in aumento" in line else 1
+        if "vix" in line or "volatilità" in line:
+            factors["VIX"] += 1 if "alto" in line else -1
+        if "ETF" in line and "oro" in line:
+            factors["ETF Oro"] += 1 if "acquisti" in line else -1
+        if "petrolio" in line:
+            factors["Petrolio"] += 1 if "salito" in line else -1
+        if "crisi" in line or "guerra" in line or "tensione" in line:
+            factors["Geopolitica"] += 1
+   
+    return factors
+
+def interpret_results(factors, volatility):
+    """Determina la direzione dell'oro sulla base dei punteggi assegnati con una soglia minima del 65% e verifica se la volatilità supporta il target di profitto equivalente a 100 punti Forex."""
+    positive = sum(v for v in factors.values() if v > 0)
+    negative = sum(v for v in factors.values() if v < 0)
+   
+    total = positive + abs(negative)
+    if total == 0:
+        return "Nessuna chiara direzione, evitare di entrare a mercato."
+   
+    positive_perc = (positive / total) * 100
+    negative_perc = (negative / total) * 100
+    gold_target = calculate_gold_equivalent()
+   
+    if "bassa" in str(volatility).lower():
+        return f"Volatilità insufficiente, evitare di entrare a mercato. Target richiesto: {gold_target:.2f} USD"
+   
+    if positive_perc >= 65:
+        return f"{positive_perc:.1f}% rialzista - Target di profitto equivalente: {gold_target:.2f} USD"
+    elif negative_perc >= 65:
+        return f"{negative_perc:.1f}% ribassista - Target di profitto equivalente: {gold_target:.2f} USD"
+    else:
+        return "Situazione incerta, evitare di entrare a mercato."
